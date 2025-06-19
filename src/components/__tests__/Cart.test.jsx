@@ -1,20 +1,18 @@
-// Cart.test.jsx
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import Cart from './Cart';
+import Cart from '../../features/cart/Cart'; // adjust path if Cart is in a different location
 
-import * as redux from 'react-redux';
+const mockDispatch = jest.fn();
+const mockSelector = jest.fn();
 
-describe('Cart Component', () => {
-  const mockDispatch = jest.fn();
-
-  beforeEach(() => {
-    jest.clearAllMocks();
-    jest.spyOn(redux, 'useDispatch').mockReturnValue(mockDispatch);
-  });
+jest.mock('react-redux', () => ({
+  ...jest.requireActual('react-redux'),
+  useDispatch: () => mockDispatch,
+  useSelector: (cb) => mockSelector(cb),
+}));
 
   test('renders empty cart message when no items', () => {
-    jest.spyOn(redux, 'useSelector').mockReturnValue([]);
+    mockSelector.mockReturnValueOnce([]); // empty cart
 
     render(<Cart />);
     expect(screen.getByText(/your cart is empty/i)).toBeInTheDocument();
@@ -25,10 +23,9 @@ describe('Cart Component', () => {
       { id: '1', title: 'Product 1', price: 10, count: 2, image: 'img1.jpg' },
       { id: '2', title: 'Product 2', price: 5, count: 1, image: 'img2.jpg' },
     ];
-    jest.spyOn(redux, 'useSelector').mockReturnValue(items);
+    mockSelector.mockReturnValueOnce(items);
 
     render(<Cart />);
-
     expect(screen.getByText('Product 1')).toBeInTheDocument();
     expect(screen.getByText('Product 2')).toBeInTheDocument();
     expect(screen.getByText('Total: $25.00')).toBeInTheDocument(); // (10*2) + (5*1)
@@ -36,7 +33,7 @@ describe('Cart Component', () => {
 
   test('increments item quantity when "+" clicked', () => {
     const items = [{ id: '1', title: 'Product 1', price: 10, count: 1, image: 'img1.jpg' }];
-    jest.spyOn(redux, 'useSelector').mockReturnValue(items);
+    mockSelector.mockReturnValueOnce(items);
 
     render(<Cart />);
 
@@ -51,7 +48,7 @@ describe('Cart Component', () => {
 
   test('decrements item quantity when "-" clicked and count > 1', () => {
     const items = [{ id: '1', title: 'Product 1', price: 10, count: 2, image: 'img1.jpg' }];
-    jest.spyOn(redux, 'useSelector').mockReturnValue(items);
+    mockSelector.mockReturnValueOnce(items);
 
     render(<Cart />);
 
@@ -66,7 +63,7 @@ describe('Cart Component', () => {
 
   test('removes item when "-" clicked and count = 1', () => {
     const items = [{ id: '1', title: 'Product 1', price: 10, count: 1, image: 'img1.jpg' }];
-    jest.spyOn(redux, 'useSelector').mockReturnValue(items);
+    mockSelector.mockReturnValueOnce(items);
 
     render(<Cart />);
 
@@ -81,7 +78,7 @@ describe('Cart Component', () => {
 
   test('removes item when "Remove" button clicked', () => {
     const items = [{ id: '1', title: 'Product 1', price: 10, count: 1, image: 'img1.jpg' }];
-    jest.spyOn(redux, 'useSelector').mockReturnValue(items);
+    mockSelector.mockReturnValueOnce(items);
 
     render(<Cart />);
 
@@ -96,7 +93,7 @@ describe('Cart Component', () => {
 
   test('clears cart when "Clear Cart" button clicked', () => {
     const items = [{ id: '1', title: 'Product 1', price: 10, count: 1, image: 'img1.jpg' }];
-    jest.spyOn(redux, 'useSelector').mockReturnValue(items);
+    mockSelector.mockReturnValueOnce(items);
 
     render(<Cart />);
 
@@ -105,4 +102,3 @@ describe('Cart Component', () => {
 
     expect(mockDispatch).toHaveBeenCalledWith({ type: 'cart/clearCart' });
   });
-});
