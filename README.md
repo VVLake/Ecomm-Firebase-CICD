@@ -81,7 +81,7 @@ Available Scripts
 -- 
 
 ## Deployed Website
-(https://full-ecomm-project-i581.vercel.app/)
+(https://ecomm-firebase-cicd.vercel.app/)
 
 Thank you for checking out the project! 
 
