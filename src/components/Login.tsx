@@ -8,6 +8,7 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   sendPasswordResetEmail,
+  updateProfile,
 } from "firebase/auth";
 
 const buttonStyle = {
@@ -33,6 +34,7 @@ const Login = () => {
   const [showForgot, setShowForgot] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -70,7 +72,13 @@ const Login = () => {
     setError(null);
     setMessage(null);
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      // Update displayName after signup
+      if (auth.currentUser) {
+        await updateProfile(auth.currentUser, {
+          displayName: displayName,
+        });
+      }
       setMessage("Sign up successful! You are now logged in.");
       navigate("/");
     } catch (err: any) {
@@ -146,6 +154,15 @@ const Login = () => {
         </form>
       ) : isSignUp ? (
         <form onSubmit={handleEmailSignup}>
+          <input
+            type="text"
+            placeholder="Display Name"
+            value={displayName}
+            onChange={e => setDisplayName(e.target.value)}
+            required
+            style={{ display: "block", marginBottom: "1rem", width: "100%", padding: "0.5rem", borderRadius: "6px", border: "1px solid #ccc" }}
+            disabled={loading}
+          />
           <input
             type="email"
             placeholder="Email"
