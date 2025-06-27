@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { auth } from "../firebaseConfig";
 import { signOut } from "firebase/auth";
 import { useAuthState } from "react-firebase-hooks/auth";
-import "./NavBar.css"; // <-- Import your CSS file
+import "./NavBar.css";
 
 const NavBar: React.FC = () => {
   const [user, loading, error] = useAuthState(auth);
@@ -32,7 +32,10 @@ const NavBar: React.FC = () => {
       )}
       {!loading && user && (
         <div style={{ marginLeft: "auto", display: "flex", alignItems: "center" }}>
-          <span style={{ marginRight: "1rem" }}>Welcome, {user.displayName}</span>
+          {/* Make welcome text a clickable link to profile */}
+          <Link to="/profile" style={{ marginRight: "1rem", textDecoration: "underline", cursor: "pointer", color: 'inherit' }}>
+            Welcome, {user.displayName || user.email}
+          </Link>
           <Link to="/order-history">
             <button className="nav-btn">Order History</button>
           </Link>

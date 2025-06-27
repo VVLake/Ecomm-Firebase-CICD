@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth } from '../firebaseConfig';
+import { auth } from '../firebaseConfig';             
+import { updateProfile as firebaseUpdateProfile } from "firebase/auth";  
 import { fetchUserProfile, updateUserProfile, deleteUserAccount } from '../utils/userService';
 
 const Profile = () => {
   const [user] = useAuthState(auth);
   const [profile, setProfile] = useState(null);
-  const [formData, setFormData] = useState({ name: '', address: '' });
+  const [formData, setFormData] = useState({ displayName: '', address: '' });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -15,9 +16,10 @@ const Profile = () => {
         try {
           const data = await fetchUserProfile(user.uid);
           setProfile(data);
+
           setFormData({
-            name: data.name || '',
-            address: data.address || '',
+            displayName: user.displayName || '',
+            address: data?.address || '',
           });
         } catch (err) {
           console.error('Error loading profile:', err.message);
@@ -39,8 +41,17 @@ const Profile = () => {
 
   const handleUpdate = async () => {
     try {
-      await updateUserProfile(user.uid, formData);
+      // Update Firebase Auth displayName
+      if (user) {
+        await firebaseUpdateProfile(user, {
+          displayName: formData.displayName,
+        });
+      }
+      // Update app database profile (address etc)
+      await updateUserProfile(user.uid, { address: formData.address });
+
       alert('Profile updated!');
+      setProfile({ ...profile, name: formData.displayName, address: formData.address }); // Update local state
     } catch (error) {
       console.error(error);
       alert('Failed to update profile.');
@@ -62,41 +73,37 @@ const Profile = () => {
 
   if (loading) return <p>Loading profile...</p>;
 
+  if (!profile) return <p>No profile data found.</p>;
+
   return (
     <div style={{ padding: '2rem', maxWidth: '600px', margin: '0 auto' }}>
-      <h2>👤 User Profile</h2>
+      <h2>User Profile</h2>
 
-      {profile ? (
-        <>
-          <div style={{ marginBottom: '1.5rem' }}>
-            <p><strong>Name:</strong> {profile.name}</p>
-            <p><strong>Email:</strong> {user.email}</p>
-            <p><strong>Address:</strong> {profile.address}</p>
-          </div>
+      <div style={{ marginBottom: '1.5rem' }}>
+        <p><strong>Name:</strong> {profile.name || formData.displayName}</p>
+        <p><strong>Email:</strong> {user.email}</p>
+        <p><strong>Address:</strong> {profile.address}</p>
+      </div>
 
-          <div style={{ marginTop: '2rem' }}>
-            <h3>Edit Profile</h3>
-            <label>
-              Name: <input name="name" value={formData.name} onChange={handleChange} />
-            </label>
-            <br />
-            <label>
-              Address: <input name="address" value={formData.address} onChange={handleChange} />
-            </label>
-            <br />
-            <button onClick={handleUpdate} style={{ marginTop: '1rem' }}>Save Changes</button>
-          </div>
+      <div style={{ marginTop: '2rem' }}>
+        <h3>Edit Profile</h3>
+        <label>
+          Display Name: <input name="displayName" value={formData.displayName} onChange={handleChange} />
+        </label>
+        <br />
+        <label>
+          Address: <input name="address" value={formData.address} onChange={handleChange} />
+        </label>
+        <br />
+        <button onClick={handleUpdate} style={{ marginTop: '1rem' }}>Save Changes</button>
+      </div>
 
-          <button
-            onClick={handleDeleteAccount}
-            style={{ color: 'white', backgroundColor: 'red', border: 'none', padding: '0.5rem 1rem', marginTop: '2rem', borderRadius: '4px', cursor: 'pointer' }}
-          >
-            Delete My Account
-          </button>
-        </>
-      ) : (
-        <p>No profile data found.</p>
-      )}
+      <button
+        onClick={handleDeleteAccount}
+        style={{ color: 'white', backgroundColor: 'red', border: 'none', padding: '0.5rem 1rem', marginTop: '2rem', borderRadius: '4px', cursor: 'pointer' }}
+      >
+        Delete My Account
+      </button>
     </div>
   );
 };

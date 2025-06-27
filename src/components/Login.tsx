@@ -9,7 +9,10 @@ import {
   createUserWithEmailAndPassword,
   sendPasswordResetEmail,
   updateProfile,
+  User,
 } from "firebase/auth";
+import { db } from "../firebaseConfig";
+import { doc, setDoc, getDoc } from "firebase/firestore";
 
 const buttonStyle = {
   marginTop: '0.5rem',
@@ -28,6 +31,18 @@ const secondaryButtonStyle = {
   backgroundColor: '#6c757d',
 };
 
+const createUserProfileIfNotExists = async (user: User, displayName?: string) => {
+  const userRef = doc(db, "users", user.uid);
+  const docSnap = await getDoc(userRef);
+  if (!docSnap.exists()) {
+    await setDoc(userRef, {
+      name: displayName || user.displayName || "",
+      email: user.email,
+      address: "",
+    });
+  }
+};
+
 const Login = () => {
   const navigate = useNavigate();
   const [isSignUp, setIsSignUp] = useState(false);
@@ -44,7 +59,10 @@ const Login = () => {
     setError(null);
     setMessage(null);
     try {
-      await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      // Ensure Firestore user profile exists
+      await createUserProfileIfNotExists(user);
       navigate("/");
     } catch (err: any) {
       setError(err.message);
@@ -58,7 +76,10 @@ const Login = () => {
     setError(null);
     setMessage(null);
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      // Ensure Firestore user profile exists
+      await createUserProfileIfNotExists(user);
       navigate("/");
     } catch (err: any) {
       setError(err.message);
@@ -73,12 +94,11 @@ const Login = () => {
     setMessage(null);
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      // Update displayName after signup
-      if (auth.currentUser) {
-        await updateProfile(auth.currentUser, {
-          displayName: displayName,
-        });
-      }
+      const user = userCredential.user;
+      // Update displayName in Auth
+      await updateProfile(user, { displayName });
+      // Create user profile in Firestore
+      await createUserProfileIfNotExists(user, displayName);
       setMessage("Sign up successful! You are now logged in.");
       navigate("/");
     } catch (err: any) {
