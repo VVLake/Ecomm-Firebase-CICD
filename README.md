@@ -78,8 +78,7 @@ Available Scripts
 - npm run build – Build for production
 - npm run preview – Preview production build locally
 
--- 
-
+--
 ## Deployed Website
 (https://ecomm-firebase-cicd.vercel.app/)
 
@@ -88,3 +87,19 @@ Thank you for checking out the project!
 --
 
 Author: Valeria Lake [LinkedIn](www.linkedin.com/in/valerialake95)
+
+## Continuous Deployment Workflow
+
+Our GitHub Actions workflow runs tests on every push to `main` and then builds the React app before deployment.
+
+A typical workflow includes steps like:
+
+```yaml
+- name: Install dependencies
+  run: npm ci
+
+- name: Run tests
+  run: npm test -- --watchAll=false
+
+- name: Build React app
+  run: npm run build
