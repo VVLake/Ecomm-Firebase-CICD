@@ -72,7 +72,12 @@ const Home = () => {
             justifyContent: 'center',
           }}
         >
-          {products?.map((product) => (
+          {products
+  ?.filter((product) =>
+    category ? product.category === category : true
+  )
+  .map((product) => (
+
             <div
               key={product.id}
               style={{
