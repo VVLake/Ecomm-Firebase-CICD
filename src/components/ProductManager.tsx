@@ -1,4 +1,5 @@
 import React, { useEffect, useState, ChangeEvent, FormEvent } from 'react';
+import CategoryFilter from './CategoryFilter';
 import {
   fetchAllProducts,
   addProduct,
@@ -51,6 +52,7 @@ const ProductManager: React.FC = () => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [formData, setFormData] = useState<Product>(initialForm);
   const [loading, setLoading] = useState<boolean>(false);
+  const [selectedCategory, setSelectedCategory] = useState<string>(''); // Category filter state
 
   // Load products on mount and after changes
   const loadProducts = async () => {
@@ -139,6 +141,11 @@ const ProductManager: React.FC = () => {
     setFormData(initialForm);
   };
 
+  // Filter products based on the selected category
+  const filteredProducts = selectedCategory
+    ? products.filter((product) => product.category === selectedCategory)
+    : products;
+
   return (
     <div
       style={{
@@ -151,6 +158,13 @@ const ProductManager: React.FC = () => {
       }}
     >
       <h2>Product Manager (Admin)</h2>
+      {/* Category Filter */}
+      <div style={{ marginBottom: '1.5rem' }}>
+        <CategoryFilter
+          value={selectedCategory}
+          onChange={setSelectedCategory}
+        />
+      </div>
       <form onSubmit={handleSubmit} style={{ marginBottom: '2rem' }}>
         <h3>{selectedProduct ? 'Edit Product' : 'Create Product'}</h3>
         <input
@@ -268,7 +282,7 @@ const ProductManager: React.FC = () => {
             justifyContent: 'flex-start',
           }}
         >
-          {products.map((product) => (
+          {filteredProducts.map((product) => (
             <div
               key={product.id}
               style={{
